@@ -6,16 +6,16 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.HashMap;
+import java.util.Map;
 
 public class DiscoveryThread implements Runnable{
 	private boolean stop;
-	private HashMap<String, ProcessConnection> connections;
+	private Map<String, ProcessConnection> connections;
 	
-	public DiscoveryThread(){
+	public DiscoveryThread(Map<String, ProcessConnection> connections){
 		stop = false;
-		connections = new HashMap<String,ProcessConnection>();
-		connections.put(Main.PROCESS_ID, null);
+		this.connections = connections;
+		
 	}
 	@Override
 	public void run() {
@@ -97,13 +97,14 @@ public class DiscoveryThread implements Runnable{
 	private void connect(String pid, InetAddress ip, int port){
 		
 		synchronized(Main.connection_lock){
-			if(connections.containsKey(pid)){
+			if(connections.containsKey(pid) || Main.PROCESS_ID.compareTo(pid) < 0){
 				return;
 			}
 			System.out.println("Starting TCP connection with " + pid + " at" + ip.toString() + ":" + port);
 			try {
 				Socket socket = new Socket(ip, port);
-				ProcessConnection process = new ProcessConnection(pid, socket);
+				ProcessConnection process = new RemoteProcessConnection(pid, socket, connections);
+				process.sendMessage(new HelloMessage(Main.PROCESS_ID));
 				connections.put(pid, process);
 				System.out.println("connected");
 			} catch (IOException e) {

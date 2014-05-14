@@ -1,11 +1,10 @@
 package ui;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Main {
 	public static final String MULTICAST_ADDR = "239.255.255.242";
@@ -20,13 +19,20 @@ public class Main {
 		BroadcastThread broadcastThread = new BroadcastThread();
 		new Thread(broadcastThread).start();
 		
-		DiscoveryThread discoveryThread = new DiscoveryThread();
+		Map<String, ProcessConnection> connections = new ConcurrentHashMap<String,ProcessConnection>();
+		connections.put(Main.PROCESS_ID, new ThisProcessConnection(PROCESS_ID));
+		
+		DiscoveryThread discoveryThread = new DiscoveryThread(connections);
 		new Thread(discoveryThread).start();
 		
+		ListenThread listenThread = new ListenThread(LISTEN_PORT, connections);
+		new Thread(listenThread).start();
 		
+		System.out.println("my pid:" + PROCESS_ID);
 		
 		
 		System.out.println("Started. Press the a key to request access to the fake resource.");
+		System.out.println("Press the c key to list active clients");
 		System.out.println("Press the e key to exit");
 
 		Scanner sc = new Scanner(System.in);
@@ -40,7 +46,13 @@ public class Main {
 					sc.close();
 					broadcastThread.finish();
 					discoveryThread.finish();
+					listenThread.finish();
 					return;
+				}else if(c.equals("c")){
+					System.out.println("Active clients:");
+					for (Map.Entry<String, ProcessConnection> entry : connections.entrySet()) {
+						System.out.println(entry.getValue());
+					}
 				}else{
 					System.out.println("unrecognized command.");
 				}
