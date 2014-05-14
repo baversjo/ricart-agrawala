@@ -8,6 +8,7 @@ public class Main {
 	public static final int MULTICAST_PORT = 6790;
 	public static final String PROCESS_ID = UUID.randomUUID().toString();
 	public static final int LISTEN_PORT  = 4600 + (new Random().nextInt(100));
+	public static final Object connection_lock = new Object();
 	
 	
 	public static void main(String[] args) {

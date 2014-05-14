@@ -4,17 +4,18 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.HashSet;
+import java.util.HashMap;
 
 public class DiscoveryThread implements Runnable{
 	private boolean stop;
-	private HashSet<String> connected_pids;
+	private HashMap<String, ProcessConnection> connections;
 	
 	public DiscoveryThread(){
 		stop = false;
-		connected_pids = new HashSet<String>();
-		connected_pids.add(Main.PROCESS_ID);
+		connections = new HashMap<String,ProcessConnection>();
+		connections.put(Main.PROCESS_ID, null);
 	}
 	@Override
 	public void run() {
@@ -52,10 +53,8 @@ public class DiscoveryThread implements Runnable{
 							
 								port = Integer.parseInt(parts[1].substring(5));
 								
-								if(!connected_pids.contains(pid)){
-									connected_pids.add(pid);
-									connect(pid, recv.getAddress(), port);
-								}
+								connect(pid, recv.getAddress(), port);
+								
 								recv.setLength(buf.length);
 								continue;
 							}
@@ -96,7 +95,20 @@ public class DiscoveryThread implements Runnable{
 	}
 	
 	private void connect(String pid, InetAddress ip, int port){
-		System.out.println("Starting TCP connection with " + pid + " at" + ip.toString() + ":" + port);
+		
+		synchronized(Main.connection_lock){
+			if(connections.containsKey(pid)){
+				return;
+			}
+			System.out.println("Starting TCP connection with " + pid + " at" + ip.toString() + ":" + port);
+			try {
+				Socket socket = new Socket(ip, port);
+				ProcessConnection process = new ProcessConnection(pid, socket);
+				connections.put(pid, process);
+				System.out.println("connected");
+			} catch (IOException e) {
+			}
+		}
 		
 	}
 
