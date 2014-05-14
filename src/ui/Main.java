@@ -1,6 +1,10 @@
 package ui;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.UUID;
 
 public class Main {
@@ -13,9 +17,6 @@ public class Main {
 	
 	public static void main(String[] args) {
 		
-		
-		int port = PROCESS_ID.charAt(0) + PROCESS_ID.charAt(1);
-		
 		BroadcastThread broadcastThread = new BroadcastThread();
 		new Thread(broadcastThread).start();
 		
@@ -25,15 +26,24 @@ public class Main {
 		
 		
 		
-		System.out.println("Starting...");
-		
+		System.out.println("Started. Press the a key to request access to the fake resource.");
+		System.out.println("Press the e key to exit");
+
+		Scanner sc = new Scanner(System.in);
 		while(true){
-			try{
-				Thread.sleep(500);
-			}catch(InterruptedException ex){
-				broadcastThread.finish();
-				discoveryThread.finish();
-			}
+				String c = sc.next().trim();
+				if(c.equals("a")){
+					//TODO: request access here!
+					System.out.println("requesting access.");
+				}else if(c.equals("e")){
+					System.out.println("exiting..");
+					sc.close();
+					broadcastThread.finish();
+					discoveryThread.finish();
+					return;
+				}else{
+					System.out.println("unrecognized command.");
+				}
 		}
 		
 	}
