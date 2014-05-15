@@ -23,6 +23,7 @@ public class RemoteProcessConnection implements ProcessConnection{
 	private Socket socket;
 
 	private Map<String, ProcessConnection> connections;
+
 	
 	public RemoteProcessConnection(String pid, Socket socket, Map<String,ProcessConnection> connections) {
 		stop = false;
@@ -94,6 +95,11 @@ public class RemoteProcessConnection implements ProcessConnection{
 	
 	public String toString(){
 		return "pid '" + pid.substring(0, 3) + "'";
+	}
+
+	@Override
+	public VectorClock getVclock() {
+		throw new UnsupportedOperationException();
 	}
 
 }

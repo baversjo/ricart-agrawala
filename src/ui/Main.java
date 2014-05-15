@@ -20,13 +20,18 @@ public class Main {
 		new Thread(broadcastThread).start();
 		
 		Map<String, ProcessConnection> connections = new ConcurrentHashMap<String,ProcessConnection>();
-		connections.put(Main.PROCESS_ID, new ThisProcessConnection(PROCESS_ID));
+		
+		ThisProcessConnection thisProcess = new ThisProcessConnection(PROCESS_ID);
+		
+		connections.put(Main.PROCESS_ID, thisProcess);
 		
 		DiscoveryThread discoveryThread = new DiscoveryThread(connections);
 		new Thread(discoveryThread).start();
 		
 		ListenThread listenThread = new ListenThread(LISTEN_PORT, connections);
 		new Thread(listenThread).start();
+		
+		RicartAgrawala ra = new RicartAgrawala(Main.PROCESS_ID, connections);
 		
 		System.out.println("my pid:" + PROCESS_ID);
 		
@@ -40,7 +45,8 @@ public class Main {
 				String c = sc.next().trim();
 				if(c.equals("a")){
 					//TODO: request access here!
-					System.out.println("requesting access.");
+					System.out.println("requesting access to 'exampleresource'.");
+					ra.issueRequest("exampleresource");
 				}else if(c.equals("e")){
 					System.out.println("exiting..");
 					sc.close();
