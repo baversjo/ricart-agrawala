@@ -23,6 +23,9 @@ public class RemoteProcessConnection implements ProcessConnection{
 	private Socket socket;
 
 	private Map<String, ProcessConnection> connections;
+	private Map<Integer, ResponseEvent> awaitingResponse;
+	
+	private int requestCounter;
 
 	
 	public RemoteProcessConnection(String pid, Socket socket, Map<String,ProcessConnection> connections) {
@@ -30,6 +33,7 @@ public class RemoteProcessConnection implements ProcessConnection{
 		this.pid = pid;
 		this.socket = socket;
 		this.connections = connections;
+		requestCounter = 0;
 		
 		try {
 			socket.setSoTimeout(500);
@@ -58,15 +62,22 @@ public class RemoteProcessConnection implements ProcessConnection{
 		} catch (IOException e) {}
 	}
 	
-	public void sendMessage(Serializable object){
+	public void sendMessage(Message message){
 		try {
 			ObjectOutputStream oos = new ObjectOutputStream(out);
-			oos.writeObject(object);
-			System.out.println("Sent " + object.getClass().getName());
+			oos.writeObject(message);
+			System.out.println("Sent " + message.getClass().getName());
 		} catch (IOException e) {
 			finish();
 			e.printStackTrace();
 		}
+	}
+	
+	public void sendMessage(Message message, ResponseEvent e){
+		requestCounter++;
+		message.setRequestId(requestCounter);
+		awaitingResponse.put(requestCounter, e);
+		sendMessage(message);
 	}
 	private void handleMessage(Object o){
 		System.out.println("Received " + o.getClass().getName());

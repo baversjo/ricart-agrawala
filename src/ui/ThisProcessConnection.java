@@ -16,8 +16,8 @@ public class ThisProcessConnection implements ProcessConnection{
 	}
 
 	@Override
-	public void sendMessage(Serializable object) {
-		System.out.println("PROCESS WAS SENT MESSAGE TO ITSELF:" + object.getClass().getName() + ". TODO: HANDLE THIS!");
+	public void sendMessage(Message message) {
+		System.out.println("PROCESS WAS SENT MESSAGE TO ITSELF:" + message.getClass().getName() + ". TODO: HANDLE THIS!");
 		
 	}
 	

@@ -1,16 +1,21 @@
 package ui;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class RicartAgrawala {
 	private Map<String, ProcessConnection> connections;
 	private String pid;
 	private ProcessConnection processConnection;
+	
+	private RequestMessage currentRequest;
 
 	public RicartAgrawala(String pid, Map<String, ProcessConnection> connections){
 		this.connections = connections;
 		this.pid = pid;
 		this.processConnection = connections.get(pid);
+		
+		currentRequest = null;
 		
 	}
 	
@@ -21,10 +26,14 @@ public class RicartAgrawala {
 		rm.vclock = processConnection.getVclock();
 		rm.vclock.increment(pid);
 		
-		//TODO: save request somewhere, and we need a __copy__ of vclock!
+		currentRequest = rm;
+		currentRequest.vclock = rm.vclock.copy();
 		
 		
 		System.out.println("Sending request to all processes..");
+		
+		ConcurrentHashMap<String,Integer> waitingFor = new ConcurrentHashMap<String,Integer>();
+		
 		for (Map.Entry<String, ProcessConnection> entry : connections.entrySet()) {
 			ProcessConnection pc = entry.getValue();
 			pc.sendMessage(rm);

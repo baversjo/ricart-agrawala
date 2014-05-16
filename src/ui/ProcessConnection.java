@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public interface ProcessConnection {
 	
-	public void sendMessage(Serializable object);
+	public void sendMessage(Message message);
 	
 	public VectorClock getVclock();
 
