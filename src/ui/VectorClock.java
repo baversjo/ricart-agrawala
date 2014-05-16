@@ -14,9 +14,29 @@ public class VectorClock implements Serializable{
 		vclock = new ConcurrentHashMap<String,Integer>();
 	}
 	
-	public boolean updateWith(VectorClock other){
-		return false;
+	public void updateWith(VectorClock other){
+		for (Entry<String, Integer> entry : vclock.entrySet()) {
+			String pid = entry.getKey();
+			Integer val1 = entry.getValue();
+			Integer val2 = other.vclock.get(pid);
+			
+			if(val2 == null){ val2 = 0; }
+			
+			vclock.put(pid, Math.max(val1, val2));
+			
+		}
 		
+		for (Entry<String, Integer> entry : other.vclock.entrySet()) {
+			String pid = entry.getKey();
+			Integer val1 = entry.getValue();
+			Integer val2 = vclock.get(pid);
+			
+			if(val2 == null){ val2 = 0; }
+			
+			vclock.put(pid, Math.max(val1, val2));
+			
+		}
+
 	}
 	
 	public void initialize(String pid){

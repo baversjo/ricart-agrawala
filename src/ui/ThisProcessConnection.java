@@ -1,6 +1,5 @@
 package ui;
 
-import java.io.Serializable;
 
 public class ThisProcessConnection implements ProcessConnection{
 
@@ -18,6 +17,10 @@ public class ThisProcessConnection implements ProcessConnection{
 	@Override
 	public void sendMessage(Message message) {
 		System.out.println("PROCESS WAS SENT MESSAGE TO ITSELF:" + message.getClass().getName() + ". TODO: HANDLE THIS!");
+		
+	}
+	public void sendMessage(Message message, ResponseEvent e) {
+		sendMessage(message);
 		
 	}
 	

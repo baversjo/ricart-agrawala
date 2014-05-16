@@ -79,8 +79,13 @@ public class RemoteProcessConnection implements ProcessConnection{
 		awaitingResponse.put(requestCounter, e);
 		sendMessage(message);
 	}
-	private void handleMessage(Object o){
+	private void handleMessage(Message o){
+		Integer rid = o.getRequestId();
+		ResponseEvent e = awaitingResponse.get(rid);
 		System.out.println("Received " + o.getClass().getName());
+		if(e != null){
+			e.notify(o);
+		}
 	}
 	
 	private class ListenThread implements Runnable{
@@ -90,7 +95,7 @@ public class RemoteProcessConnection implements ProcessConnection{
 			while(!stop){
 				try {
 					ObjectInputStream ois = new ObjectInputStream(in);
-					Object o = ois.readObject();
+					Message o = (Message) ois.readObject();
 					//ois.close();
 					handleMessage(o);
 					

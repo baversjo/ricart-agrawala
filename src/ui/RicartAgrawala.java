@@ -8,12 +8,16 @@ public class RicartAgrawala {
 	private String pid;
 	private ProcessConnection processConnection;
 	
+	private boolean accessing;
+	
 	private RequestMessage currentRequest;
 
 	public RicartAgrawala(String pid, Map<String, ProcessConnection> connections){
 		this.connections = connections;
 		this.pid = pid;
 		this.processConnection = connections.get(pid);
+		
+		accessing = false;
 		
 		currentRequest = null;
 		
@@ -32,14 +36,28 @@ public class RicartAgrawala {
 		
 		System.out.println("Sending request to all processes..");
 		
-		ConcurrentHashMap<String,Integer> waitingFor = new ConcurrentHashMap<String,Integer>();
+		final ConcurrentHashMap<String,Integer> waitingFor = new ConcurrentHashMap<String,Integer>();
 		
 		for (Map.Entry<String, ProcessConnection> entry : connections.entrySet()) {
 			ProcessConnection pc = entry.getValue();
-			pc.sendMessage(rm);
+			pc.sendMessage(rm, new ResponseEvent() {
+				
+				@Override
+				public void notify(Message message) {
+					OKMessage okm = (OKMessage) message;
+					
+					waitingFor.remove(okm.pid);
+					
+					if(waitingFor.size() == 0){
+						accessing = true;
+						FakeResource.access();
+						accessing = false;
+						currentRequest = null;
+						//TODO: check queue
+					}
+				}
+			});
 		}
-		
-		//TODO: if all ok, access resource!
 	}
 	
 	public void receiveRequest(RequestMessage rm){
