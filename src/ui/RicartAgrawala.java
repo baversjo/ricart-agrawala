@@ -8,9 +8,9 @@ public class RicartAgrawala {
 	private String pid;
 	private ProcessConnection processConnection;
 	
-	private boolean accessing;
+	private volatile boolean accessing;
 	
-	private RequestMessage currentRequest;
+	private volatile RequestMessage currentRequest;
 
 	public RicartAgrawala(String pid, Map<String, ProcessConnection> connections){
 		this.connections = connections;
@@ -45,7 +45,7 @@ public class RicartAgrawala {
 				@Override
 				public void notify(Message message) {
 					OKMessage okm = (OKMessage) message;
-					
+					System.out.println("OK from " + okm.pid);
 					waitingFor.remove(okm.pid);
 					
 					if(waitingFor.size() == 0){
