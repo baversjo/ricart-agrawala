@@ -23,17 +23,18 @@ public class RemoteProcessConnection implements ProcessConnection{
 	private Socket socket;
 
 	private Map<String, ProcessConnection> connections;
-	private Map<Integer, ResponseEvent> awaitingResponse;
+	private ResponseEvent awaitingResponse;
+
+	private RicartAgrawala ra;
 	
-	private int requestCounter;
 
 	
-	public RemoteProcessConnection(String pid, Socket socket, Map<String,ProcessConnection> connections) {
+	public RemoteProcessConnection(String pid, Socket socket, Map<String,ProcessConnection> connections, RicartAgrawala ra) {
 		stop = false;
 		this.pid = pid;
 		this.socket = socket;
 		this.connections = connections;
-		requestCounter = 0;
+		this.ra = ra;
 		
 		try {
 			socket.setSoTimeout(500);
@@ -53,7 +54,7 @@ public class RemoteProcessConnection implements ProcessConnection{
 	}
 	
 	public void finish(){
-		System.out.println("closing " + toString() + ". TODO: notify connection list!");
+		System.out.println("closing " + toString() + ".");
 		stop = true;
 		active = false;
 		try {
@@ -74,17 +75,21 @@ public class RemoteProcessConnection implements ProcessConnection{
 	}
 	
 	public void sendMessage(Message message, ResponseEvent e){
-		requestCounter++;
-		message.setRequestId(requestCounter);
-		awaitingResponse.put(requestCounter, e);
+		awaitingResponse = e;
 		sendMessage(message);
 	}
 	private void handleMessage(Message o){
-		Integer rid = o.getRequestId();
-		ResponseEvent e = awaitingResponse.get(rid);
+		ResponseEvent e = awaitingResponse;
+		
 		System.out.println("Received " + o.getClass().getName());
-		if(e != null){
+		
+		if(o instanceof OKMessage && e != null){
+			awaitingResponse = null;
 			e.notify(o);
+		}
+		
+		if(o instanceof RequestMessage){
+			ra.receiveRequest(this, (RequestMessage)o);
 		}
 	}
 	
@@ -116,6 +121,11 @@ public class RemoteProcessConnection implements ProcessConnection{
 	@Override
 	public VectorClock getVclock() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getPid() {
+		return pid;
 	}
 
 }

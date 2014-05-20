@@ -1,6 +1,5 @@
 package ui;
 
-import java.io.Serializable;
 
 public interface ProcessConnection {
 	
@@ -8,5 +7,7 @@ public interface ProcessConnection {
 	public void sendMessage(Message message, ResponseEvent e);
 	
 	public VectorClock getVclock();
+	
+	public String getPid();
 
 }

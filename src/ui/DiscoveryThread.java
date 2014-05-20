@@ -11,10 +11,12 @@ import java.util.Map;
 public class DiscoveryThread implements Runnable{
 	private boolean stop;
 	private Map<String, ProcessConnection> connections;
+	private RicartAgrawala ra;
 	
-	public DiscoveryThread(Map<String, ProcessConnection> connections){
+	public DiscoveryThread(Map<String, ProcessConnection> connections, RicartAgrawala ra){
 		stop = false;
 		this.connections = connections;
+		this.ra = ra;
 		
 	}
 	@Override
@@ -103,7 +105,7 @@ public class DiscoveryThread implements Runnable{
 			System.out.println("Starting TCP connection with " + pid + " at" + ip.toString() + ":" + port);
 			try {
 				Socket socket = new Socket(ip, port);
-				ProcessConnection process = new RemoteProcessConnection(pid, socket, connections);
+				ProcessConnection process = new RemoteProcessConnection(pid, socket, connections, ra);
 				process.sendMessage(new HelloMessage(Main.PROCESS_ID));
 				connections.put(pid, process);
 				System.out.println("connected");

@@ -25,13 +25,16 @@ public class Main {
 		
 		connections.put(Main.PROCESS_ID, thisProcess);
 		
-		DiscoveryThread discoveryThread = new DiscoveryThread(connections);
+		RicartAgrawala ra = new RicartAgrawala(Main.PROCESS_ID, connections);
+		thisProcess.setRicartAgrawala(ra);
+		
+		DiscoveryThread discoveryThread = new DiscoveryThread(connections,ra);
 		new Thread(discoveryThread).start();
 		
-		ListenThread listenThread = new ListenThread(LISTEN_PORT, connections);
+		ListenThread listenThread = new ListenThread(LISTEN_PORT, connections,ra);
 		new Thread(listenThread).start();
 		
-		RicartAgrawala ra = new RicartAgrawala(Main.PROCESS_ID, connections);
+		
 		
 		System.out.println("my pid:" + PROCESS_ID);
 		

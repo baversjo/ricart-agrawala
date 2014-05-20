@@ -1,7 +1,9 @@
 package ui;
 
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class RicartAgrawala {
 	private Map<String, ProcessConnection> connections;
@@ -11,15 +13,20 @@ public class RicartAgrawala {
 	private volatile boolean accessing;
 	
 	private volatile RequestMessage currentRequest;
+	
+	private Queue<ProcessConnection> okQueue;
 
 	public RicartAgrawala(String pid, Map<String, ProcessConnection> connections){
 		this.connections = connections;
 		this.pid = pid;
 		this.processConnection = connections.get(pid);
+
 		
 		accessing = false;
 		
 		currentRequest = null;
+		
+		okQueue = new ConcurrentLinkedQueue<ProcessConnection>();
 		
 	}
 	
@@ -40,11 +47,17 @@ public class RicartAgrawala {
 		
 		for (Map.Entry<String, ProcessConnection> entry : connections.entrySet()) {
 			ProcessConnection pc = entry.getValue();
+			waitingFor.put(pc.getPid(), 1);
 			pc.sendMessage(rm, new ResponseEvent() {
 				
 				@Override
 				public void notify(Message message) {
 					OKMessage okm = (OKMessage) message;
+					
+					VectorClock vclock = processConnection.getVclock();
+					vclock.increment(pid);
+					vclock.updateWith(okm.vclock);
+					
 					System.out.println("OK from " + okm.pid);
 					waitingFor.remove(okm.pid);
 					
@@ -53,21 +66,50 @@ public class RicartAgrawala {
 						FakeResource.access();
 						accessing = false;
 						currentRequest = null;
-						//TODO: check queue
+						while(okQueue.peek() != null){
+							ProcessConnection pc = okQueue.poll();
+							sendOk(pc);
+						}
 					}
 				}
 			});
 		}
 	}
 	
-	public void receiveRequest(RequestMessage rm){
-		//TODO: update local vector clock (merge + increment)!
-		//TODO: what defines lower / higher timestamp in vclock??
+	public void receiveRequest(ProcessConnection pc, RequestMessage rm){
 		
-		//if not accessing and not currently requesting access => send OK msg
-		//if accessing, queue request and do nothing
-		//if currently requesting, compare timestamp in my request with timestamp in inc request.
-		//	received lower: send OK message
-		// 	sent lower: queue request and send nothing.
+		VectorClock vclock = processConnection.getVclock();
+		
+		vclock.updateWith(rm.vclock);
+		vclock.increment(pid);
+		
+		if(!accessing && (currentRequest == null || processConnection == pc)){
+			sendOk(pc);
+		}else{
+			if(accessing){
+				okQueue.add(pc);
+			}else if(currentRequest != null){
+				if(pc.getVclock().lowerThan(processConnection.getVclock())){
+					sendOk(pc);
+				}else{
+					okQueue.offer(pc);
+				}
+			}
+		}
+	}
+	
+	
+	
+	private void sendOk(ProcessConnection pc){
+		VectorClock vclock = processConnection.getVclock();
+		vclock.increment(pid);
+		
+		OKMessage okm = new OKMessage();
+		okm.resourceName = "exampleresource";
+		okm.pid = pid;
+		
+		okm.vclock = vclock;
+		
+		pc.sendMessage(okm);
 	}
 }

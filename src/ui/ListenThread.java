@@ -16,11 +16,13 @@ public class ListenThread implements Runnable{
 	private ServerSocket socket;
 	
 	Map<String, ProcessConnection> connections;
+	private RicartAgrawala ra;
 	
-	public ListenThread(int port, Map<String, ProcessConnection> connections){
+	public ListenThread(int port, Map<String, ProcessConnection> connections, RicartAgrawala ra){
 		stop = false;
 		this.port = port;
 		this.connections = connections;
+		this.ra = ra;
 	}
 	@Override
 	public void run() {
@@ -51,7 +53,7 @@ public class ListenThread implements Runnable{
 							int port = newClient.getPort();
 							System.out.println("Got TCP connection with " + pid + " at" + ip.toString() + ":" + port);
 							
-							ProcessConnection process = new RemoteProcessConnection(pid, newClient, connections);
+							ProcessConnection process = new RemoteProcessConnection(pid, newClient, connections, ra);
 							connections.put(pid, process);
 							System.out.println("connected");
 							
