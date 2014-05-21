@@ -85,8 +85,19 @@ public class VectorClock implements Serializable{
 	public VectorClock copy(){
 		VectorClock newClock = new VectorClock();
 		for(Entry<String, Integer> entry : vclock.entrySet()){
-			vclock.put(entry.getKey(), entry.getValue());
+			newClock.vclock.put(entry.getKey(), entry.getValue());
 		}
 		return newClock;
+	}
+	
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		for(Entry<String, Integer> entry : vclock.entrySet()){
+			String pid = entry.getKey();
+			int val = entry.getValue();
+			sb.append(pid.substring(0, 3) + ":" + val + ", ");
+		}
+		return sb.toString();
+
 	}
 }

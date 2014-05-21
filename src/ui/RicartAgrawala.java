@@ -45,9 +45,12 @@ public class RicartAgrawala {
 		
 		final ConcurrentHashMap<String,Integer> waitingFor = new ConcurrentHashMap<String,Integer>();
 		
+		for (ProcessConnection pc : connections.values()) {
+			waitingFor.put(pc.getPid(), 1);
+		}
+		
 		for (Map.Entry<String, ProcessConnection> entry : connections.entrySet()) {
 			ProcessConnection pc = entry.getValue();
-			waitingFor.put(pc.getPid(), 1);
 			pc.sendMessage(rm, new ResponseEvent() {
 				
 				@Override
@@ -87,11 +90,15 @@ public class RicartAgrawala {
 			sendOk(pc);
 		}else{
 			if(accessing){
-				okQueue.add(pc);
+				okQueue.offer(pc);
 			}else if(currentRequest != null){
-				if(pc.getVclock().lowerThan(processConnection.getVclock())){
+				System.out.println("vclock cmp:" + pc.toString() + " < " + processConnection.toString() + " ? ");
+				System.out.println("\t" + rm.vclock.toString() + " < " + currentRequest.vclock.toString());
+				if(rm.vclock.lowerThan(currentRequest.vclock)){
+					System.out.println("\tYes, lower than");
 					sendOk(pc);
 				}else{
+					System.out.println("\tNo, lower than");
 					okQueue.offer(pc);
 				}
 			}
